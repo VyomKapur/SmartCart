@@ -10,7 +10,6 @@ const port = process.env.PORT || 3000;
 const app = express();
 
 
-
 app.use(bodyParser.urlencoded({extended : true}));
 app.use(express.static("public"));
 app.set('view engine', 'ejs');
@@ -22,7 +21,18 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb+srv://vyommkapur:"+ process.env.ATLASPSWD +"@cluster0.gvhgcxt.mongodb.net/SmartCartDB");
+// mongoose.connect("mongodb+srv://vyommkapur:"+ process.env.ATLASPSWD +"@cluster0.gvhgcxt.mongodb.net/SmartCartDB");
+// connectionPromise = mongoose.connection.asPromise();
+// connectionPromise.then(()=>{
+// 	console.log("connected to SmartCartDB");
+// 	app.listen(port, function(){
+// 		console.log("listening on port : " + port);
+// 	});
+// }).catch(()=>{
+// 	console.log("failed to connect to DB");
+// });
+;
+mongoose.connect("mongodb+srv://smartcart:"+process.env.CARTDATA+"@cluster0.wmyheb4.mongodb.net/cartData");
 connectionPromise = mongoose.connection.asPromise();
 connectionPromise.then(()=>{
 	console.log("connected to SmartCartDB");
@@ -32,6 +42,12 @@ connectionPromise.then(()=>{
 }).catch(()=>{
 	console.log("failed to connect to DB");
 });
+
+const cartData = new mongoose.Schema({
+	class_id: Number,
+	name: String, 
+	quantity: String
+}, {collection: 'cart1'})
 
 const shoppingListItemSchema = new mongoose.Schema({
 	shoppingListItem : String
@@ -48,6 +64,8 @@ userSchema.plugin(findOrCreate);
 
 const ShoppingListItem = new mongoose.model("ShoppingListItem" , shoppingListItemSchema);
 const User = new mongoose.model("User", userSchema);
+const Item = new mongoose.model("cart1", cartData);
+
 passport.use(User.createStrategy());
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
@@ -115,3 +133,10 @@ app.post("/addItemToShoppingList", (req, res)=>{
 	res.redirect("/secrets");
 });
 
+app.get("/showShoppingCart", (req, res)=>{
+	Item.find().then(foundItem => {
+		res.render("showCartData", {
+			items: foundItem
+		});
+	})
+});
